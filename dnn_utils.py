@@ -3,6 +3,17 @@ import h5py
 
 
 def load_parameters(path: str):
+    """Load parameters from hdf5 file
+
+    Generate a dictionary contained parameters from a specifical hdf5 file.
+
+    Arguments:
+    path -- The path to the hdf5 file where the parameters are stored.
+
+    Returns:
+    parameters -- A dictionary contained parameters (W1, b1, ..., WL, bL).
+    """
+    
     parameters = {}
     with h5py.File(path) as para_hd:
         for w in para_hd['weight']:
@@ -13,15 +24,17 @@ def load_parameters(path: str):
     return parameters
 
 def sigmoid(Z: np.ndarray):
-    """
-    Implements the sigmoid activation function.
+    """Implements the sigmoid activation function.
+
+    This implements the logistic function. Given the independent variable Z,
+    the return value A is calculated by the formula `A = 1/( 1+e^(-Z) )`.
 
     Arguments:
-    Z -- Output of the linear layer, numpy array of any shape
+    Z -- Output of the linear layer, numpy array of any shape.
     
     Returns:
-    A -- output of sigmoid(z), same shape as Z
-    cache -- cache of Z, stored for computing the backward pass efficiently
+    A -- Output of sigmoid(Z), same shape as Z.
+    cache -- Cache of Z, stored for computing the backward propagation efficiently.
     """
 
     A = 1/(1 + np.exp(-Z))
@@ -32,15 +45,17 @@ def sigmoid(Z: np.ndarray):
     return A, cache
 
 def relu(Z: np.ndarray):
-    """
-    Implements the RELU activation function.
+    """Implements the RELU activation function.
+
+    This implements the ReLU (Rectified Linear Unit) activation function. Given the independent
+    variable Z, the return value A is calculated by the formula `A = max(0, Z)`.
 
     Arguments:
-    Z -- Output of the linear layer, numpy array of any shape
+    Z -- Output of the linear layer, numpy array of any shape.
 
     Returns:
-    A -- output of relu(z), of the same shape as Z
-    cache -- cache of Z, stored for computing the backward pass efficiently
+    A -- Output of relu(z), of the same shape as Z.
+    cache -- Cache of Z, stored for computing the backward propagation efficiently.
     """
 
     A = np.maximum(0, Z)
@@ -51,12 +66,14 @@ def relu(Z: np.ndarray):
     return A, cache
 
 def sigmoid_backward(dA: np.ndarray, cache: np.ndarray) -> np.ndarray:
-    """
-    Implement the backward propagation for a single SIGMOID unit.
+    """Implement the backward propagation for a single SIGMOID unit.
+
+    `s = A = 1/(1 + e^(-Z) )`. Given value of dA, this function computes dZ by the formula
+    `dZ = dA * s * (1-s)`.
 
     Arguments:
-    dA -- post-activation gradient, of any shape
-    cache -- 'Z' where we store for computing backward propagation efficiently
+    dA -- Gradient of the cost with respect to post-activation A.
+    cache -- 'Z' where we store for computing backward propagation efficiently.
 
     Returns:
     dZ -- Gradient of the cost with respect to Z
@@ -72,15 +89,14 @@ def sigmoid_backward(dA: np.ndarray, cache: np.ndarray) -> np.ndarray:
     return dZ
 
 def relu_backward(dA: np.ndarray, cache: np.ndarray) -> np.ndarray:
-    """
-    Implement the backward propagation for a single RELU unit.
+    """Implement the backward propagation for a single RELU unit.
 
     Arguments:
-    dA -- post-activation gradient, of any shape
-    cache -- 'Z' where we store for computing backward propagation efficiently
+    dA -- Gradient of the cost with respect to post-activation A.
+    cache -- 'Z' where we store for computing backward propagation efficiently.
 
     Returns:
-    dZ -- Gradient of the cost with respect to Z
+    dZ -- Gradient of the cost with respect to Z.
     """
 
     Z = cache
@@ -92,19 +108,18 @@ def relu_backward(dA: np.ndarray, cache: np.ndarray) -> np.ndarray:
     return dZ
 
 def initialize_parameters_deep(layers_dims: tuple) -> dict:
-    """
-    Initialize parameters for every layer.
+    """Initialize parameters for every layer.
 
     Arguments:
-    layers_dims -- python array (list) containing the dimensions of each layer in our network
+    layers_dims -- Python tuple (or list) containing the dimensions of each layer in our network.
     
     Returns:
-    parameters -- python dictionary containing your parameters "W1", "b1", ..., "WL", "bL":
-                    Wl -- weight matrix of shape (layers_dims[l], layers_dims[l-1])
-                    bl -- bias vector of shape (layers_dims[l], 1)
+    parameters -- Python dictionary containing your parameters ("W1", "b1", ..., "WL", "bL":
+                  Wl - weight matrix of shape (layers_dims[l], layers_dims[l-1])
+                  bl - bias vector of shape (layers_dims[l], 1) ).
     """
 
-    np.random.seed(1)
+    np.random.seed(1) 
     parameters = {}
     L = len(layers_dims)
 
@@ -118,17 +133,18 @@ def initialize_parameters_deep(layers_dims: tuple) -> dict:
     return parameters
 
 def linear_forward(A_prev: np.ndarray, W: np.ndarray, b: np.ndarray):
-    """
-    Implement the linear part of a layer's forward propagation.
+    """Implement the linear part of a layer's forward propagation.
+
+    Calculation formula is `Z = W dot A_prev + b`.
 
     Arguments:
-    A_prev -- activations from previous layer (or input data): shape = (size of previous layer, number of examples)
-    W -- weights matrix: shape = (size of current layer, size of previous layer)
-    b -- bias vector: shape = (size of current layer, 1)
+    A_prev -- Activations from previous layer (or input data): shape = (size of previous layer, number of examples).
+    W -- Weights matrix: shape = (size of current layer, size of previous layer).
+    b -- Bias vector: shape = (size of current layer, 1).
 
     Returns:
-    Z -- the input of the activation function, also called pre-activation parameter
-    cache -- a python tuple containing 'A', 'W', and 'b', stored for computing the backward pass efficiently
+    Z -- The input of the activation function, also called pre-activation parameter.
+    cache -- A python tuple containing 'A', 'W', and 'b', stored for computing the backward pass efficiently.
     """
 
     Z = np.dot(W, A_prev) + b
@@ -140,20 +156,19 @@ def linear_forward(A_prev: np.ndarray, W: np.ndarray, b: np.ndarray):
 
 def linear_activation_forward(A_prev: np.ndarray, W: np.ndarray, b: np.ndarray, 
                               activation: str, keep_prob: float = 1.0):
-    """
-    Implement the forward propagation for the LINEAR->ACTIVATION layer
+    """Implement the forward propagation for the LINEAR->ACTIVATION layer.
 
     Arguments:
-    A_prev -- activations from previous layer (or input data): (size of previous layer, number of examples)
-    W -- weights matrix: numpy array of shape (size of current layer, size of previous layer)
-    b -- bias vector, numpy array of shape (size of the current layer, 1)
-    activation -- the activation to be used in this layer, stored as a text string: "sigmoid" or "relu"
-    keep_prob -- probability of keeping a neuron active during drop-out, scalar
+    A_prev -- Activations from previous layer (or input data): (size of previous layer, number of examples).
+    W -- Weights matrix, numpy array of shape (size of current layer, size of previous layer).
+    b -- Bias vector, numpy array of shape (size of the current layer, 1).
+    activation -- The activation to be used in this layer, stored as a text string: "sigmoid" or "relu".
+    keep_prob -- Probability of keeping a neuron active during drop-out, scalar.
 
     Returns:
-    A -- the output of the activation function, also called the post-activation value 
-    cache -- a python dictionary containing "linear_cache" and "activation_cache";
-             stored for computing the backward pass efficiently
+    A -- The output of the activation function, also called the post-activation value.
+    cache -- A python dictionary containing "linear_cache", "activation_cache" and "dropout_cache;
+             stored for computing the backward pass efficiently.
     """
 
     if activation == 'sigmoid':
@@ -174,20 +189,19 @@ def linear_activation_forward(A_prev: np.ndarray, W: np.ndarray, b: np.ndarray,
     return A, cache 
 
 def linear_activation_forward_check(A_prev: np.ndarray, W: np.ndarray, b: np.ndarray, 
-                              activation: str, drop_cache: np.ndarray, keep_prob: float = 1.0):
-    """
-    Implement the forward propagation for the LINEAR->ACTIVATION layer
+                                    activation: str, drop_cache: np.ndarray, keep_prob: float = 1.0):
+    """Implement the forward propagation for the LINEAR->ACTIVATION layer, but for checking.
 
     Arguments:
-    A_prev -- activations from previous layer (or input data): (size of previous layer, number of examples)
-    W -- weights matrix: numpy array of shape (size of current layer, size of previous layer)
-    b -- bias vector, numpy array of shape (size of the current layer, 1)
-    activation -- the activation to be used in this layer, stored as a text string: "sigmoid" or "relu"
-    drop_cache -- 
-    keep_prob -- probability of keeping a neuron active during drop-out, scalar
+    A_prev -- Activations from previous layer (or input data): shape = (size of previous layer, number of examples).
+    W -- Weights matrix, numpy array of shape (size of current layer, size of previous layer).
+    b -- Bias vector, numpy array of shape (size of the current layer, 1).
+    activation -- The activation to be used in this layer, stored as a text string: "sigmoid" or "relu".
+    drop_cache -- Dropout matrix, numpy array of shape (size of current layer, number of examples).
+    keep_prob -- Probability of keeping a neuron active during drop-out, scalar.
 
     Returns:
-    A -- the output of the activation function, also called the post-activation value 
+    A -- The output of the activation function, also called the post-activation value.
     """
 
     if activation == 'sigmoid':
@@ -205,19 +219,18 @@ def linear_activation_forward_check(A_prev: np.ndarray, W: np.ndarray, b: np.nda
     return A
 
 def L_model_forward(X: np.ndarray, parameters: dict, keep_prob: float = 1.0):
-    """
-    Implement forward propagation for the [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID computation
+    """Implement forward propagation for the [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID computation.
     
     Arguments:
-    X -- data, numpy array of shape (input size, number of examples)
-    parameters -- python dictonary containing weigh and bias matrix "W1", "b1", ..., "WL", "bL".
-    keep_prob -- probability of keeping a neuron active during drop-out, scalar
+    X -- Input Data, numpy array of shape (input size, number of examples).
+    parameters -- Python dictonary containing weigh and bias matrix "W1", "b1", ..., "WL", "bL".
+    keep_prob -- Probability of keeping a neuron active during drop-out, scalar.
     
     Returns:
-    AL -- last post-activation value
-    caches -- list of caches containing:
+    AL -- Last post-activation value.
+    caches -- List of caches containing:
                 every cache of linear_relu_forward() (there are L-1 of them, indexed from 0 to L-2)
-                the cache of linear_sigmoid_forward() (there is one, indexed L-1)
+                the cache of linear_sigmoid_forward() (there is one, indexed L-1).
     """
 
     caches = []
@@ -244,17 +257,16 @@ def L_model_forward(X: np.ndarray, parameters: dict, keep_prob: float = 1.0):
     return AL, caches
 
 def L_model_forward_check(X: np.ndarray, parameters: dict, drop_caches: list, keep_prob: float = 1.0):
-    """
-    Implement forward propagation for the [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID computation
+    """Implement forward propagation for the [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID computation, but for checking.
     
     Arguments:
-    X -- data, numpy array of shape (input size, number of examples)
-    parameters -- python dictonary containing weigh and bias matrix "W1", "b1", ..., "WL", "bL".
-    drop_caches -- 
-    keep_prob -- probability of keeping a neuron active during drop-out, scalar
+    X -- Input Data, numpy array of shape (input size, number of examples).
+    parameters -- Python dictonary containing weigh and bias matrix "W1", "b1", ..., "WL", "bL".
+    drop_caches -- Dropout caches, containing dropout mask of each layer.
+    keep_prob -- Probability of keeping a neuron active during drop-out, scalar.
     
     Returns:
-    AL -- last post-activation value
+    AL -- Last post-activation value.
     """
 
     A = X
@@ -280,17 +292,16 @@ def L_model_forward_check(X: np.ndarray, parameters: dict, drop_caches: list, ke
     return AL
 
 def compute_cost(AL: np.ndarray, Y:np.ndarray, parameters: dict, lambd: float = 0) -> np.ndarray:
-    """
-    Implement the cost function.
+    """Implement the cost function.
 
     Arguments:
-    AL -- probability vector corresponding to your label predictions, shape (1, number of examples)
-    Y -- true "label" vector, shape (1, number of examples)
-    parameters -- python dictonary containing weigh and bias matrix "W1", "b1", ..., "WL", "bL".
-    lambd -- regularization hyperparameter, scalar
+    AL -- Probability vector corresponding to your label predictions, shape of (1, number of examples).
+    Y -- True "label" vector, shape of (1, number of examples).
+    parameters -- Python dictonary containing weigh and bias matrix "W1", "b1", ..., "WL", "bL".
+    lambd -- L2 Regularization hyperparameter, scalar.
 
     Returns:
-    cost -- cross-entropy cost
+    cost -- Cross-entropy cost.
     """
 
     m = Y.shape[1]
@@ -307,18 +318,17 @@ def compute_cost(AL: np.ndarray, Y:np.ndarray, parameters: dict, lambd: float = 
     return cost
 
 def linear_backward(dZ: np.ndarray, cache, lambd: float = 0):
-    """
-    Implement the linear portion of backward propagation for a single layer (layer l)
+    """Implement the linear portion of backward propagation for a single layer.
 
     Arguments:
-    dZ -- Gradient of the cost with respect to the linear output (of current layer l)
-    cache -- tuple of values (A_prev, W, b) coming from the forward propagation in the current layer
-    lambd -- regularization hyperparameter, scalar
+    dZ -- Gradient of the cost with respect to the linear output (of current layer l).
+    cache -- Tuple of values (A_prev, W, b) coming from the forward propagation in the current layer.
+    lambd -- L2 Regularization hyperparameter, scalar.
 
     Returns:
-    dA_prev -- Gradient of the cost with respect to the activation (of the previous layer l-1), same shape as A_prev
-    dW -- Gradient of the cost with respect to W (current layer l), same shape as W
-    db -- Gradient of the cost with respect to b (current layer l), same shape as b
+    dA_prev -- Gradient of the cost with respect to the activation (of the previous layer l-1), same shape as A_prev.
+    dW -- Gradient of the cost with respect to W (current layer l), same shape as W.
+    db -- Gradient of the cost with respect to b (current layer l), same shape as b.
     """
     A_prev, W, b = cache
     m = A_prev.shape[1]
@@ -334,20 +344,19 @@ def linear_backward(dZ: np.ndarray, cache, lambd: float = 0):
     return dA_prev, dW, db
 
 def linear_activation_backward(dA: np.ndarray, cache, activation: str, lambd: float=0, keep_prob: float = 1.0):
-    """
-    Implement the backward propagation for the LINEAR->ACTIVATION layer.
+    """Implement the backward propagation for the LINEAR->ACTIVATION layer.
     
     Arguments:
-    dA -- post-activation gradient for current layer l 
-    cache -- tuple of values (linear_cache, activation_cache) we store for computing backward propagation efficiently
-    activation -- the activation to be used in this layer, stored as a text string: "sigmoid" or "relu"
-    lambd -- regularization hyperparameter, scalar
-    keep_prob -- probability of keeping a neuron active during drop-out, scalar
+    dA -- Post-activation gradient for current layer l.
+    cache -- Tuple of values (linear_cache, activation_cache) we store for computing backward propagation efficiently.
+    activation -- The activation to be used in this layer, stored as a text string: "sigmoid" or "relu".
+    lambd -- L2 Regularization hyperparameter, scalar.
+    keep_prob -- Probability of keeping a neuron active during drop-out, scalar.
 
     Returns:
-    dA_prev -- Gradient of the cost with respect to the activation (of the previous layer l-1), same shape as A_prev
-    dW -- Gradient of the cost with respect to W (current layer l), same shape as W
-    db -- Gradient of the cost with respect to b (current layer l), same shape as b
+    dA_prev -- Gradient of the cost with respect to the activation (of the previous layer l-1), same shape as A_prev.
+    dW -- Gradient of the cost with respect to W (current layer l), same shape as W.
+    db -- Gradient of the cost with respect to b (current layer l), same shape as b.
     """
 
     linear_cache, activation_cache, D = cache
@@ -365,17 +374,16 @@ def linear_activation_backward(dA: np.ndarray, cache, activation: str, lambd: fl
     return dA_prev, dW, db
 
 def L_model_backward(AL: np.ndarray, Y: np.ndarray, caches, lambd: float = 0, keep_prob: float = 1.0):
-    """
-    Implement the backward propagation for the [LINEAR->RELU] * (L-1) -> LINEAR -> SIGMOID group
+    """Implement the backward propagation for the [LINEAR->RELU] * (L-1) -> LINEAR -> SIGMOID group.
     
     Arguments:
-    AL -- probability vector, output of the forward propagation (L_model_forward())
-    Y -- true "label" vector (containing 0 if non-cat, 1 if cat)
-    caches -- list of caches containing:
-                every cache of linear_activation_forward() with "relu" (there are (L-1) or them, indexes from 0 to L-2)
-                the cache of linear_activation_forward() with "sigmoid" (there is one, index L-1)
-    lambd -- regularization hyperparameter, scalar
-    keep_prob -- probability of keeping a neuron active during drop-out, scalar
+    AL -- Probability vector, output of the forward propagation (L_model_forward()).
+    Y -- True "label" vector.
+    caches -- List of caches containing:
+                every cache of linear_activation_forward() with "relu" (there are (L-1) or them, indexes from 0 to L-2).
+                the cache of linear_activation_forward() with "sigmoid" (there is one, index L-1).
+    lambd -- L2 Regularization hyperparameter, scalar.
+    keep_prob -- Probability of keeping a neuron active during drop-out, scalar.
     
     Returns:
     grads -- A dictionary with the gradients
@@ -404,16 +412,15 @@ def L_model_backward(AL: np.ndarray, Y: np.ndarray, caches, lambd: float = 0, ke
     return grads
 
 def update_parameters(parameters: dict, grads: dict, learning_rate: float):
-    """
-    Update parameters using gradient descent
+    """Update parameters using gradient descent.
     
     Arguments:
-    parameters -- python dictionary containing your parameters 
-    grads -- python dictionary containing your gradients, output of L_model_backward
-    learning_rate -- learning rate of the gradient descent update rule
+    parameters -- Python dictionary containing parameters.
+    grads -- Python dictionary containing gradients, output of L_model_backward.
+    learning_rate -- learning rate of the gradient descent update rule.
     
     Returns:
-    parameters -- python dictionary containing your updated parameters 
+    parameters -- python dictionary containing your updated parameters
                   parameters["W" + str(l)] = ... 
                   parameters["b" + str(l)] = ...
     """
@@ -427,22 +434,22 @@ def update_parameters(parameters: dict, grads: dict, learning_rate: float):
     return parameters
 
 def predict(X: np.ndarray, Y: np.ndarray, parameters: dict):
-    """
-    This function is used to predict the results of a  L-layer neural network.
+    """This function is used to predict the results of a  L-layer neural network.
     
     Arguments:
-    X -- data set of examples you would like to label
-    Y -- true "label" vector
-    parameters -- parameters of the trained model
+    X -- Input Data set of examples you would like to label.
+    Y -- True "label" vector.
+    parameters -- Parameters of the trained model.
     
     Returns:
-    p -- predictions for the given dataset X
+    p -- Predictions for the given dataset X.
+    accuracy -- Accuracy of prediction by this neural network.
     """
 
     m = X.shape[1]
     p = np.zeros((1, m))
 
-    probas, caches = L_model_forward(X, parameters)
+    probas, _ = L_model_forward(X, parameters)
 
     for i in range(0, probas.shape[1]):
         if probas[0, i] > 0.5:
@@ -455,6 +462,15 @@ def predict(X: np.ndarray, Y: np.ndarray, parameters: dict):
     return p, accuracy
 
 def identify(X: np.ndarray, parameters: dict):
+    """Identification by input data.
+
+    Arguments:
+    X -- Input Data set of examples you would like to label.
+    parameters -- Parameters of the trained model.
+
+    Returns:
+    p -- Predictions (or identification) for the given dataset X.
+    """
     m = X.shape[1]
     p = np.zeros((1, m))
 
@@ -465,22 +481,24 @@ def identify(X: np.ndarray, parameters: dict):
     return p
 
 def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 3000, 
-                  lambd: float = 0 , keep_prob: float = 1.0, print_cost = True, check_back_prop = False):
-    """
-    Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
+                  lambd: float = 0 , keep_prob: float = 1.0, print_cost = True, check_back_prop = False, step: int = 100):
+    """Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
     
     Arguments:
-    X -- data, of shape (input size, number of examples)
-    Y -- true "label" vector, of shape (1, number of examples)
-    layers_dims -- list containing the input size and each layer size, of length (number of layers + 1).
-    learning_rate -- learning rate of the gradient descent update rule
-    num_iterations -- number of iterations of the optimization loop
-    lambd -- regularization hyperparameter, scalar
-    keep_prob -- probability of keeping a neuron active during drop-out, scalar
-    print_cost -- if True, it prints the cost every 100 steps
+    X -- Data, of shape (input size, number of examples).
+    Y -- True "label" vector, of shape (1, number of examples).
+    layers_dims -- List containing the input size and each layer size, of length (number of layers + 1).
+    learning_rate -- Learning rate of the gradient descent update rule.
+    num_iterations -- Number of iterations of the optimization loop.
+    lambd -- L2 regularization hyperparameter, scalar.
+    keep_prob -- Probability of keeping a neuron active during drop-out, scalar
+    print_cost -- If True, it prints the cost every xxx steps.
+    check_back_prop -- Whether to check the correctness of back-propagation.
+    step -- The step size of recording cost and printing cost.
     
     Returns:
-    parameters -- parameters learnt by the model. They can then be used to predict.
+    parameters -- Parameters learnt by the model. They can then be used to predict.
+    costs -- Costs learnt by the model. They can then be used to plot a cost curve.
     """
 
     np.random.seed(1)
@@ -509,29 +527,28 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 30
         parameters = update_parameters(parameters, grads, learning_rate)
 
         # Print the cost every 100 training example
-        if print_cost and i % 100 == 0:
-            print ("Cost after iteration %i: %f" %(i, cost))
-        if i % 10 == 0:
+        if print_cost and i % step == 0:
+            print ("Cost after iteration {:i}: {:f}".format(i+1, cost))
+        if i % step == 0:
             costs.append(cost)
     
     return parameters, costs
 
 def dictionary_to_vector(parameters: dict):
-    """
-    Roll all our parameters dictionary into a single vector satisfying our specific required shape.
+    """Roll all our parameters dictionary into a single vector satisfying our specific required shape.
 
     Arguments:
-    parameters -- python dictonary containing weigh and bias matrix "W1", "b1", ..., "WL", "bL".
+    parameters -- Python dictonary containing weigh and bias matrix "W1", "b1", ..., "WL", "bL".
 
     Returns:
-    theta -- vector containing all parameters
+    theta -- Vector containing all parameters.
     """
 
-    L = len(parameters) // 2 + 1
+    L = len(parameters) // 2
     theta = None
-    for l in range(1, L):
-        new_vector_w = parameters[f"W{l}"].reshape((-1, 1))
-        new_vector_b = parameters[f"b{l}"].reshape((-1, 1))
+    for l in range(L):
+        new_vector_w = parameters[f"W{l+1}"].reshape((-1, 1))
+        new_vector_b = parameters[f"b{l+1}"].reshape((-1, 1))
         new_vector = np.concatenate((new_vector_w, new_vector_b), axis=0)
         if theta is None:
             theta = new_vector
@@ -541,15 +558,14 @@ def dictionary_to_vector(parameters: dict):
     return theta
 
 def vector_to_dictionary(theta: np.ndarray, layers_dims: dict):
-    """
-    Unroll all our parameters dictionary from a single vector satisfying our specific required shape.
+    """Unroll all our parameters dictionary from a single vector satisfying our specific required shape.
 
     Arguments:
-    theta -- vector containing all parameters
-    layers_dims -- list containing the input size and each layer size, of length (number of layers + 1).
+    theta -- Vector containing all parameters.
+    layers_dims -- List containing the input size and each layer size, of length (number of layers + 1).
 
     Returns:
-    parameters -- python dictonary containing weigh and bias matrix "W1", "b1", ..., "WL", "bL". 
+    parameters -- Python dictonary containing weigh and bias matrix ("W1", "b1", ..., "WL", "bL"). 
     """
 
     parameters = {}
@@ -567,21 +583,20 @@ def vector_to_dictionary(theta: np.ndarray, layers_dims: dict):
     return parameters
 
 def grads_to_vector(grads: dict):
-    """
-    Roll all our grads dictionary into a single vector satisfying our specific required shape.
+    """Roll all our grads dictionary into a single vector satisfying our specific required shape.
 
     Arguments:
-    grads -- python dictonary containing gradients of cost with respect to the parameters("dW1", "db1", ..., "dWL", "dbL").
+    grads -- Python dictonary containing gradients of cost with respect to the parameters("dW1", "db1", ..., "dWL", "dbL").
 
     Returns:
-    theta -- vector containing all grads
+    theta -- Vector containing all grads.
     """
 
-    L = len(grads) // 2 + 1
+    L = len(grads) // 2
     theta = None
-    for l in range(1, L):
-        new_vector_dw = grads[f"dW{l}"].reshape((-1, 1))
-        new_vector_db = grads[f"db{l}"].reshape((-1, 1))
+    for l in range(L):
+        new_vector_dw = grads[f"dW{l+1}"].reshape((-1, 1))
+        new_vector_db = grads[f"db{l+1}"].reshape((-1, 1))
         new_vector = np.concatenate((new_vector_dw, new_vector_db), axis=0)
         if theta is None:
             theta = new_vector
@@ -592,22 +607,21 @@ def grads_to_vector(grads: dict):
 
 def gradient_check(parameters: dict, grads: dict, drop_caches: list, X: np.ndarray, Y: np.ndarray, layers_dims, 
                    lambd: float = 0, keep_prob = 1.0, epsilon: float = 1e-7):
-    """
-    Checks if backward_propagation_n computes correctly the gradient of the cost output by L_model_forward.
+    """Checks if backward_propagation_n computes correctly the gradient of the cost output by L_model_forward.
     
     Arguments:
-    parameters -- python dictonary containing weigh and bias matrix "W1", "b1", ..., "WL", "bL".
-    grads -- output of L_model_backward, contains gradients of the cost with respect to the parameters. 
-    drop_caches -- 
-    X -- data, numpy array of shape (input size, number of examples)
-    Y -- true "label"
-    layers_dims -- list containing the input size and each layer size, of length (number of layers + 1).
-    lambd -- regularization hyperparameter, scalar
-    keep_prob -- 
-    epsilon -- tiny shift to the input to compute approximated gradient with formula(1)
+    parameters -- Python dictonary containing weigh and bias matrix "W1", "b1", ..., "WL", "bL".
+    grads -- Output of L_model_backward, contains gradients of the cost with respect to the parameters. 
+    drop_caches -- Dropout caches, containing dropout mask of each layer.
+    X -- Data, numpy array of shape (input size, number of examples).
+    Y -- True "label".
+    layers_dims -- List containing the input size and each layer size, of length (number of layers + 1).
+    lambd -- L2 regularization hyperparameter, scalar.
+    keep_prob -- Probability of keeping a neuron active during drop-out, scalar.
+    epsilon -- Tiny shift to the input to compute approximated gradient.
     
     Returns:
-    difference -- difference between the approximated gradient and the backward propagation gradient
+    difference -- Difference between the approximated gradient and the backward propagation gradient.
     """
 
     parameters_values = dictionary_to_vector(parameters)
