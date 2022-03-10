@@ -2,36 +2,6 @@ import numpy as np
 import h5py
 
 
-def load_train_dataset():
-    train_dataset = h5py.File('datasets/train_catvnoncat.h5')
-    train_set_x_orig = np.array(train_dataset['train_set_x'])
-    train_set_y_orig = np.array(train_dataset['train_set_y'])
-    train_dataset.close()
-    train_set_x = train_set_x_orig.reshape(train_set_x_orig.shape[0], -1).T/255.
-    train_set_y = train_set_y_orig.reshape(train_set_y_orig.shape[0], 1).T
-
-    return train_set_x, train_set_y
-
-def load_dataset(h5_file_path: str):
-    dataset = h5py.File(h5_file_path)
-    set_x_orig = np.array(dataset['set_x'])
-    set_y_orig = np.array(dataset['set_y'])
-    dataset.close()
-    set_x = set_x_orig.reshape(set_x_orig.shape[0], -1).T/255. 
-    set_y = set_y_orig.reshape(set_y_orig.shape[0], 1).T
-
-    return set_x, set_y
-
-def load_test_dataset():
-    test_dataset = h5py.File('datasets/test_catvnoncat.h5')
-    test_set_x_orig = np.array(test_dataset['test_set_x'])
-    test_set_y_orig = np.array(test_dataset['test_set_y'])
-    test_dataset.close()
-    test_set_x = test_set_x_orig.reshape(test_set_x_orig.shape[0], -1).T/255.
-    test_set_y = test_set_y_orig.reshape(test_set_y_orig.shape[0], -1).T
-
-    return test_set_x, test_set_y
-
 def load_parameters(path: str):
     parameters = {}
     with h5py.File(path) as para_hd:
@@ -483,6 +453,16 @@ def predict(X: np.ndarray, Y: np.ndarray, parameters: dict):
     accuracy = np.sum((p == Y)/m)
 
     return p, accuracy
+
+def identify(X: np.ndarray, parameters: dict):
+    m = X.shape[1]
+    p = np.zeros((1, m))
+
+    probs, _ = L_model_forward(X, parameters)
+
+    p[0, :] = 1 if probs[0, :] > 0.5 else 0
+
+    return p
 
 def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 3000, 
                   lambd: float = 0 , keep_prob: float = 1.0, print_cost = True, check_back_prop = False):

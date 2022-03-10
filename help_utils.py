@@ -3,6 +3,36 @@ import os
 from PIL import Image
 
 
+def load_train_dataset():
+    train_dataset = h5py.File('datasets/train_catvnoncat.h5')
+    train_set_x_orig = np.array(train_dataset['train_set_x'])
+    train_set_y_orig = np.array(train_dataset['train_set_y'])
+    train_dataset.close()
+    train_set_x = train_set_x_orig.reshape(train_set_x_orig.shape[0], -1).T/255.0
+    train_set_y = train_set_y_orig.reshape(train_set_y_orig.shape[0], 1).T
+
+    return train_set_x, train_set_y
+
+def load_dataset(h5_file_path: str):
+    dataset = h5py.File(h5_file_path)
+    set_x_orig = np.array(dataset['set_x'])
+    set_y_orig = np.array(dataset['set_y'])
+    dataset.close()
+    set_x = set_x_orig.reshape(set_x_orig.shape[0], -1).T/255.0 
+    set_y = set_y_orig.reshape(set_y_orig.shape[0], 1).T
+
+    return set_x, set_y
+
+def load_test_dataset():
+    test_dataset = h5py.File('datasets/test_catvnoncat.h5')
+    test_set_x_orig = np.array(test_dataset['test_set_x'])
+    test_set_y_orig = np.array(test_dataset['test_set_y'])
+    test_dataset.close()
+    test_set_x = test_set_x_orig.reshape(test_set_x_orig.shape[0], -1).T/255.0
+    test_set_y = test_set_y_orig.reshape(test_set_y_orig.shape[0], -1).T
+
+    return test_set_x, test_set_y
+
 def gen_imgs_from_dataset(dataset_path: str, img_save_folder: str, set_name: str, format: str = 'jpg'):        
     with h5py.File(dataset_path) as hf:
         imgs_arr = np.array(hf[set_name])
@@ -12,7 +42,7 @@ def gen_imgs_from_dataset(dataset_path: str, img_save_folder: str, set_name: str
         img.save(f'{img_save_folder}/{i}.{format}')
         i += 1
 
-def gen_datatest_from_images(img_folder: str, dataset_path: str):
+def gen_datatest_from_same_class_images(img_folder: str, dataset_path: str, class_id: int):
     if os.path.exists(dataset_path):
         os.remove(dataset_path)
     hf = h5py.File(dataset_path, 'a')
@@ -27,11 +57,11 @@ def gen_datatest_from_images(img_folder: str, dataset_path: str):
                 img.resize((64, 64))
             if set_x_arr is None:
                 set_x_arr = np.array(img).reshape((1, 64, 64, 3))
-                set_y_arr = np.array([[0]])
+                set_y_arr = np.array([[class_id]])
             else:
                 img_arr = np.array(img).reshape((1, 64, 64, 3))
                 set_x_arr = np.append(set_x_arr, img_arr, axis=0)
-                set_y_arr = np.append(set_y_arr, [[0]], axis=0)
+                set_y_arr = np.append(set_y_arr, [[class_id]], axis=0)
             print(f"put {img_name} into dataset...")
         except Exception:
             pass
@@ -51,8 +81,8 @@ def detect(filepath, para_path):
             img = img.convert('RGB')
         image = img.resize((64, 64))
     try:
-        my_image = np.array(image).reshape(1, 64*64*3).T
-        my_predict = predict(my_image, [[1]], parameters)
+        my_image = np.array(image).reshape(1, 64*64*3).T/255.0
+        my_predict = identify(my_image, parameters)
     except Exception:
         my_predict = [[0]]
     return bool(np.squeeze(my_predict))
@@ -60,7 +90,7 @@ def detect(filepath, para_path):
 
 if __name__ == '__main__':
     filepath = input('your image:')
-    if detect(filepath, 'test_para.h5'):
+    if detect(filepath, 'parameters.h5'):
         print('it is a cat!')
     else:
         print('it is not a cat!')
