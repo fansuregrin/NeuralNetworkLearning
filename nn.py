@@ -1,15 +1,16 @@
 from dnn_utils import *
+from help_utils import *
 import matplotlib.pyplot as plt
 
 
 def train_and_test_dnn(para_path: str, train_X, train_Y, test_X, test_Y, layers_dims, learning_rate, 
-                       graph_name = 'costs_curve', num_iterations=3000, lambd=0, keep_prob=1.0, print_cost=True):
+                       graph_name = 'costs_curve', num_iterations=3000, lambd=0, keep_prob=1.0, print_cost=True, check_back_prop=False):
     
     # training parameters
     print("\033[92m" + f"training para: learning_rate={learning_rate}, iterations={num_iterations}, lambda={lambd}, keep_prob={keep_prob}, \
 layers_dims: {' '.join([str(nes) for nes in layers_dims])}" + "\033[0m")
     parameters, costs = L_layer_model(train_X, train_Y, layers_dims, learning_rate=learning_rate, num_iterations=num_iterations, 
-                               lambd=lambd, keep_prob=keep_prob, print_cost=print_cost)
+                               lambd=lambd, keep_prob=keep_prob, print_cost=print_cost, check_back_prop=check_back_prop)
     
     # save parameters
     print(f"saving parameters into {para_path}...")
@@ -33,8 +34,8 @@ layers_dims: {' '.join([str(nes) for nes in layers_dims])}" + "\033[0m")
     plt.ylabel('cost')
     plt.xlabel('iterations (x10)')
     layers_neurons = ' -> '.join([str(nes) for nes in layers_dims])
-    plt.title("Learning rate = " + str(learning_rate) + "\nlambda = " + str(lambd) + \
-        "\nneurons per layer: " + layers_neurons)
+    plt.title("Learning rate = " + str(learning_rate) + "\nlambda = " + str(lambd) + ", keep_prob = " + str(keep_prob) + \
+              "\nneurons per layer: " + layers_neurons)
     plt.text(len(costs), costs[-1], f'last cost: {costs[-1]}')
     plt.text(len(costs)//2, costs[0], 'train set accuracy: {:.3f}\ntest set accuracy: {:.3f}'.format(train_accu, test_accu))
     plt.savefig(f'{graph_name}.png', format='png')
@@ -43,6 +44,7 @@ layers_dims: {' '.join([str(nes) for nes in layers_dims])}" + "\033[0m")
 def test_dnn(para_path: str, X, Y):
     parameters = load_parameters(para_path)
     pred, accu = predict(X, Y, parameters)
+    print(f'accuracy: {str(accu)}')
     mis = (pred == Y)
     mis_index = np.squeeze(np.argwhere(mis == False)[:, 1])
     imgs = X[:, mis_index].T.reshape((-1, 64, 64, 3))
@@ -57,19 +59,19 @@ def test_dnn(para_path: str, X, Y):
 
 if __name__ == '__main__':
     # load set
-    # train_X, train_Y = load_train_dataset()
-    # test_X, test_Y = load_test_dataset()
+    train_X, train_Y = load_train_dataset()
+    test_X, test_Y = load_test_dataset()
     # 
-    np.random.seed(1)
-    train_X = np.random.rand(10, 5)
-    train_Y = np.array([[1, 0, 0, 1, 0]])
-    test_X = np.random.rand(10, 2)
-    test_Y = np.array([[1, 0]])
+    # np.random.seed(1)
+    # train_X = np.random.rand(10, 5)
+    # train_Y = np.array([[1, 0, 0, 1, 0]])
+    # test_X = np.random.rand(10, 2)
+    # test_Y = np.array([[1, 0]])
 
     # set neurons per layer
     # layers_dims = (train_X.shape[0], 20, 10, 5, 1)
-    layers_dims = (train_X.shape[0], 4, 1)
-    # layers_dims = [train_X.shape[0], 10, 5, 1]
+    # layers_dims = (train_X.shape[0], 4, 1)
+    layers_dims = [train_X.shape[0], 10, 5, 1]
     
     # gen learning rates list for tuning
     # rates = set()
@@ -91,7 +93,10 @@ if __name__ == '__main__':
         # layers_dims[2] = (i+1)*2
         # train_and_test_dnn('{}/para_{:02d}.h5'.format(dir, i+1), train_X, train_Y, test_X, test_Y, layers_dims, 
                         #    learning_rate=0.007, graph_name='{}/costs_graph_{:02d}'.format(dir, i+1))
-    # train_and_test_dnn('para_dropout_01.h5', train_X, train_Y, test_X, test_Y, layers_dims, learning_rate=0.007, 
-                        # graph_name='costs_graph_dropout_01', keep_prob=0.9)
-    train_and_test_dnn('check_para.h5', train_X, train_Y, test_X, test_Y, layers_dims, learning_rate=0.007,
-                        graph_name='costs_check', num_iterations=10, lambd=0.8, keep_prob=0.8, print_cost=False)
+    # for i in range(4):
+        # train_and_test_dnn('para_dropout_0{}.h5'.format(i+6), train_X, train_Y, test_X, test_Y, layers_dims, learning_rate=0.007, 
+                        # graph_name='costs_graph_dropout_0{}'.format(i+6), keep_prob=0.1*(4-i))
+    # train_and_test_dnn('check_para.h5', train_X, train_Y, test_X, test_Y, layers_dims, learning_rate=0.007,
+                        # graph_name='costs_check', num_iterations=10, lambd=0.8, keep_prob=0.8, print_cost=False)
+    
+    # test_dnn('layers_neurons_tuning_3/para_05.h5', test_X, test_Y)

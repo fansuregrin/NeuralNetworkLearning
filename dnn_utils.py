@@ -1,47 +1,9 @@
 import numpy as np
 import h5py
-import os
-from PIL import Image
 
-
-def gen_imgs_from_dataset(dataset_path: str, img_save_folder: str, format: str = 'jpg'):        
-    with h5py.File(dataset_path) as hf:
-        imgs_arr = np.array(hf['test_set_x'])
-    i = 1
-    for img_arr in imgs_arr[:]:
-        img = Image.fromarray(img_arr, mode='RGB')
-        img.save(f'{img_save_folder}/{i}.{format}')
-        i += 1
-
-def gen_datatest_from_images(img_folder: str, dataset_path: str):
-    if os.path.exists(dataset_path):
-        os.remove(dataset_path)
-    hf = h5py.File(dataset_path, 'w')
-    set_x_arr = None
-    set_y_arr = None
-    for img_name in os.listdir(img_folder):
-        try:
-            img = Image.open(f"{img_folder}/{img_name}")
-            if img.mode != 'RGB':
-                img.convert('RGB')
-            if img.size != (64, 64):
-                img.resize((64, 64))
-            if set_x_arr is None:
-                set_x_arr = np.array(img).reshape((1, 64, 64, 3))
-                set_y_arr = np.array([[1]])
-            else:
-                img_arr = np.array(img).reshape((1, 64, 64, 3))
-                set_x_arr = np.append(set_x_arr, img_arr, axis=0)
-                set_y_arr = np.append(set_y_arr, [[1]], axis=0)
-            print(f"put {img_name} into dataset...")
-        except Exception:
-            pass
-    hf.create_dataset('set_x', set_x_arr.shape, data=set_x_arr)
-    hf.create_dataset('set_y', set_y_arr.shape, data=set_y_arr)
-    hf.close()
 
 def load_train_dataset():
-    train_dataset = h5py.File('train_catvnoncat.h5')
+    train_dataset = h5py.File('datasets/train_catvnoncat.h5')
     train_set_x_orig = np.array(train_dataset['train_set_x'])
     train_set_y_orig = np.array(train_dataset['train_set_y'])
     train_dataset.close()
@@ -61,7 +23,7 @@ def load_dataset(h5_file_path: str):
     return set_x, set_y
 
 def load_test_dataset():
-    test_dataset = h5py.File('test_catvnoncat.h5')
+    test_dataset = h5py.File('datasets/test_catvnoncat.h5')
     test_set_x_orig = np.array(test_dataset['test_set_x'])
     test_set_y_orig = np.array(test_dataset['test_set_y'])
     test_dataset.close()
@@ -523,7 +485,7 @@ def predict(X: np.ndarray, Y: np.ndarray, parameters: dict):
     return p, accuracy
 
 def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 3000, 
-                  lambd: float = 0 , keep_prob: float = 1.0, print_cost=False):
+                  lambd: float = 0 , keep_prob: float = 1.0, print_cost = True, check_back_prop = False):
     """
     Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
     
@@ -558,9 +520,10 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 30
         # Backward propagation.
         grads = L_model_backward(AL, Y, caches, lambd=lambd, keep_prob=keep_prob)
  
-        # gradient check
-        drop_caches = [caches[i][2] for i in range(len(caches))]
-        gradient_check(parameters, grads, drop_caches, X, Y, layers_dims, lambd, keep_prob)
+        # Gradient check
+        if check_back_prop:
+            drop_caches = [caches[i][2] for i in range(len(caches))]
+            gradient_check(parameters, grads, drop_caches, X, Y, layers_dims, lambd, keep_prob)
 
         # Update parameters.
         parameters = update_parameters(parameters, grads, learning_rate)
