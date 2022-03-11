@@ -89,8 +89,8 @@ def detect(filepath, para_path):
 
 
 if __name__ == '__main__':
-    filepath = input('your image:')
-    if detect(filepath, 'parameters.h5'):
-        print('it is a cat!')
-    else:
-        print('it is not a cat!')
+    pass
+    # gen_datatest_from_same_class_images('/run/media/fansuregrin/SharedData/Linnaeus 5 64X64/train/berry', 'berry_2.h5', 0)
+    # gen_datatest_from_same_class_images('/run/media/fansuregrin/SharedData/Linnaeus 5 64X64/train/bird', 'birds_2.h5', 0)
+    # gen_datatest_from_same_class_images('/run/media/fansuregrin/SharedData/Linnaeus 5 64X64/train/flower', 'flower_2.h5', 0)
+    # gen_datatest_from_same_class_images('/run/media/fansuregrin/SharedData/Linnaeus 5 64X64/train/dog', 'dogs_2.h5', 0)

@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import h5py
 
@@ -480,8 +481,9 @@ def identify(X: np.ndarray, parameters: dict):
 
     return p
 
-def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 3000, 
-                  lambd: float = 0 , keep_prob: float = 1.0, print_cost = True, check_back_prop = False, step: int = 100):
+def L_layer_model(X: np.ndarray, Y: np.ndarray, layers_dims: list, learning_rate: float = 0.0075, num_iterations: int = 3000, 
+                  lambd: float = 0 , keep_prob: float = 1.0, print_cost: bool = True, check_back_prop: bool = False, 
+                  step: int = 100, use_mini_batch: bool = False, mini_batch_size: int = 64):
     """Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
     
     Arguments:
@@ -495,6 +497,8 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 30
     print_cost -- If True, it prints the cost every xxx steps.
     check_back_prop -- Whether to check the correctness of back-propagation.
     step -- The step size of recording cost and printing cost.
+    use_mini_batch -- 
+    mini_batch_size -- 
     
     Returns:
     parameters -- Parameters learnt by the model. They can then be used to predict.
@@ -507,30 +511,68 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 30
     # Parameters initialization.
     parameters = initialize_parameters_deep(layers_dims)
     
-    # Loop (gradient descent)
-    for i in range(0, num_iterations):
-        # Forward propagation: [LINEAR -> RELU]*(L-1) -> LINEAR -> SIGMOID.
-        AL, caches = L_model_forward(X, parameters, keep_prob=keep_prob)
+    # deal with mini_batch gradient descent
+    if use_mini_batch:
+        mini_batches = random_mini_batches(X, Y, mini_batch_size)
+        k = 1
+        for mini_batch in mini_batches:
+            X_mini, Y_mini = mini_batch
+            print('mini batch gradient descent {}...'.format(k))
+            k += 1
+
+            # Loop (gradient descent)
+            for i in range(0, num_iterations):
+                # Forward propagation: [LINEAR -> RELU]*(L-1) -> LINEAR -> SIGMOID.
+                AL, caches = L_model_forward(X_mini, parameters, keep_prob=keep_prob)
+                
+                # Compute cost.
+                cost = compute_cost(AL, Y_mini, parameters ,lambd=lambd)
+            
+                # Backward propagation.
+                grads = L_model_backward(AL, Y_mini, caches, lambd=lambd, keep_prob=keep_prob)
         
-        # Compute cost.
-        cost = compute_cost(AL, Y, parameters ,lambd=lambd)
+                # Gradient check
+                if check_back_prop:
+                    drop_caches = [caches[i][2] for i in range(len(caches))]
+                    gradient_check(parameters, grads, drop_caches, X_mini, Y_mini, layers_dims, lambd, keep_prob)
+
+                # Update parameters.
+                parameters = update_parameters(parameters, grads, learning_rate)
+
+                # Print and Save the cost every 100 training example
+                if print_cost and i == 0:
+                    print("Cost after iteration {:d}: {:f}".format(i+1, cost))
+                    costs.append(cost)
+                if print_cost and (i+1) % step == 0:
+                    print("Cost after iteration {:d}: {:f}".format(i+1, cost))
+                    costs.append(cost)
+    else:
+        # Loop (gradient descent)
+        for i in range(0, num_iterations):
+            # Forward propagation: [LINEAR -> RELU]*(L-1) -> LINEAR -> SIGMOID.
+            AL, caches = L_model_forward(X, parameters, keep_prob=keep_prob)
+            
+            # Compute cost.
+            cost = compute_cost(AL, Y, parameters ,lambd=lambd)
+        
+            # Backward propagation.
+            grads = L_model_backward(AL, Y, caches, lambd=lambd, keep_prob=keep_prob)
     
-        # Backward propagation.
-        grads = L_model_backward(AL, Y, caches, lambd=lambd, keep_prob=keep_prob)
- 
-        # Gradient check
-        if check_back_prop:
-            drop_caches = [caches[i][2] for i in range(len(caches))]
-            gradient_check(parameters, grads, drop_caches, X, Y, layers_dims, lambd, keep_prob)
+            # Gradient check
+            if check_back_prop:
+                drop_caches = [caches[i][2] for i in range(len(caches))]
+                gradient_check(parameters, grads, drop_caches, X, Y, layers_dims, lambd, keep_prob)
 
-        # Update parameters.
-        parameters = update_parameters(parameters, grads, learning_rate)
+            # Update parameters.
+            parameters = update_parameters(parameters, grads, learning_rate)
 
-        # Print the cost every 100 training example
-        if print_cost and i % step == 0:
-            print ("Cost after iteration {:i}: {:f}".format(i+1, cost))
-        if i % step == 0:
-            costs.append(cost)
+            # Print and Save the cost every 100 training example
+            if print_cost and i == 0:
+                print("Cost after iteration {:d}: {:f}".format(i+1, cost))
+                costs.append(cost)
+            if print_cost and (i+1) % step == 0:
+                print("Cost after iteration {:d}: {:f}".format(i+1, cost))
+                costs.append(cost)
     
     return parameters, costs
 
@@ -656,3 +698,42 @@ def gradient_check(parameters: dict, grads: dict, drop_caches: list, X: np.ndarr
         print("\033[92m" + "Your backward propagation works perfectly fine! difference = " + str(difference) + "\033[0m")
     
     return difference
+
+def random_mini_batches(X, Y, mini_batch_size = 64, seed = 0):
+    """Creates a list of random minibatches from (X, Y).
+
+    Arguments:
+    X -- Input data, of shape (input size, number of examples).
+    Y -- True "lable" vector, of shape (1, number of examples).
+    mini_batch_size -- Size of the mini batches size.
+    seed -- Random seed.
+
+    Returns:
+    mini_batches -- List of synchronous (mini_batch_X, mini_batch_Y).
+    """
+
+    np.random.seed(seed)
+    m = X.shape[1]
+    mini_batches = []
+
+    # shuffle (X, Y)
+    permutaion = list(np.random.permutation(m))
+    shuffle_X = X[:, permutaion]
+    shuffle_Y = Y[:, permutaion]
+
+    # partition (shuffle_X, shuffle_Y), except the end case
+    num_of_mini_batches = math.floor(m/mini_batch_size) 
+    for i in range(num_of_mini_batches):
+        mini_batch_X = shuffle_X[:, mini_batch_size*i:mini_batch_size*(i+1)]
+        mini_batch_Y = shuffle_Y[:, mini_batch_size*i:mini_batch_size*(i+1)]
+        mini_batch = (mini_batch_X, mini_batch_Y)
+        mini_batches.append(mini_batch)
+    
+    # deal with end case
+    if m % mini_batch_size != 0:
+        mini_batch_X = shuffle_X[:, mini_batch_size*num_of_mini_batches:m]
+        mini_batch_Y = shuffle_Y[:, mini_batch_size*num_of_mini_batches:m]
+        mini_batch = (mini_batch_X, mini_batch_Y)
+        mini_batches.append(mini_batch)
+
+    return mini_batches
