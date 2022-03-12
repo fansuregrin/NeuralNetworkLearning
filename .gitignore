@@ -10,5 +10,3 @@ learning_rate_tuning_2/
 regularization/
 test_cats/
 mini_batch/
-datasets/
-**/*.h5
