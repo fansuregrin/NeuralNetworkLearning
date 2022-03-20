@@ -1,28 +1,6 @@
 import math
 import numpy as np
-import h5py
 
-
-def load_parameters(path: str):
-    """Load parameters from hdf5 file
-
-    Generate a dictionary contained parameters from a specifical hdf5 file.
-
-    Arguments:
-    path -- The path to the hdf5 file where the parameters are stored.
-
-    Returns:
-    parameters -- A dictionary contained parameters (W1, b1, ..., WL, bL).
-    """
-    
-    parameters = {}
-    with h5py.File(path) as para_hd:
-        for w in para_hd['weight']:
-            parameters[w] = np.array(para_hd['weight'][w])
-        for b in para_hd['bias']:
-            parameters[b] = np.array(para_hd['bias'][b])
-    
-    return parameters
 
 def sigmoid(Z: np.ndarray):
     """Implements the sigmoid activation function.
@@ -497,8 +475,8 @@ def L_layer_model(X: np.ndarray, Y: np.ndarray, layers_dims: list, learning_rate
     print_cost -- If True, it prints the cost every xxx steps.
     check_back_prop -- Whether to check the correctness of back-propagation.
     step -- The step size of recording cost and printing cost.
-    use_mini_batch -- 
-    mini_batch_size -- 
+    use_mini_batch -- Whether to use mini-batch gradient descent.
+    mini_batch_size -- The size of a mini batch.
     
     Returns:
     parameters -- Parameters learnt by the model. They can then be used to predict.

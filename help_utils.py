@@ -1,7 +1,29 @@
 from dnn_utils import *
-import os
 from PIL import Image
+import os
+import h5py
 
+
+def load_parameters(path: str):
+    """Load parameters from hdf5 file
+
+    Generate a dictionary contained parameters from a specifical hdf5 file.
+
+    Arguments:
+    path -- The path to the hdf5 file where the parameters are stored.
+
+    Returns:
+    parameters -- A dictionary contained parameters (W1, b1, ..., WL, bL).
+    """
+    
+    parameters = {}
+    with h5py.File(path) as para_hd:
+        for w in para_hd['weight']:
+            parameters[w] = np.array(para_hd['weight'][w])
+        for b in para_hd['bias']:
+            parameters[b] = np.array(para_hd['bias'][b])
+    
+    return parameters
 
 def load_train_dataset():
     train_dataset = h5py.File('datasets/train_catvnoncat.h5')
